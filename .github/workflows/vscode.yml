@@ -1,0 +1,43 @@
+name: vscode-build
+
+on:
+  schedule:
+    - cron:  '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find lastest VSCode tag
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository:  microsoft/vscode
+          releases-only: true 
+        id: microsoft
+      - run: echo "VSCode is at version ${{ steps.microsoft.outputs.tag }}"
+      
+      - name: Find our current tag
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository:  ${{ github.repository }}
+          releases-only: true 
+        id: builder  
+      - run: echo "Our repo is at version ${{ steps.builder.outputs.tag }}"
+
+      - name: Build VSCode AppImage 
+        if: ${{steps.builder.outputs.tag  != steps.microsoft.outputs.tag }}
+        run: |
+         wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          chmod +x ./pkg2appimage-*.AppImage
+         ./pkg2appimage-*.AppImage VSCode
+          
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: ${{steps.builder.outputs.tag  != steps.microsoft.outputs.tag }}
+        with:
+          files: out/*.AppImage*
+          tag_name: ${{ steps.microsoft.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
