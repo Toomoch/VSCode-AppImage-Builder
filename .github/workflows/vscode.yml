@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Find lastest VSCode tag
+      - name: Find latest VSCode tag
         uses: oprypin/find-latest-tag@v1
         with:
           repository:  microsoft/vscode
@@ -29,9 +29,9 @@ jobs:
       - name: Build VSCode AppImage 
         if: ${{steps.builder.outputs.tag  != steps.microsoft.outputs.tag }}
         run: |
-         wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
           chmod +x ./pkg2appimage-*.AppImage
-         ./pkg2appimage-*.AppImage VSCode
+          ./pkg2appimage-*.AppImage VSCode
           
       - name: Release
         uses: softprops/action-gh-release@v1
